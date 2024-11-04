@@ -21,9 +21,10 @@ In the project 1 folder, you will find scripts that will help streamline the set
 
 ### Requirements
 
->[!NOTE]
-> The material and contents are written under and intended for the Arch Linux environment as it uses Arch Linux's distinguished package manager `pacman`.
+To make use of the configuration scripts you will need:
 
-You will need to download **all** contents in the project 1 folder. To run these scripts you will need to have `root` user access or have `sudo` user privileges.
+* a Linux-based system running the Arch Linux distribution since the scripts are making use of the package manager `pacman`.
+* internet connection to download packages and to prevent `pacman` from failing.
+* to have `root` user access or have `sudo` user privileges with proper executable permissions in order to run the scripts
 
 ## Project 2: New User Script
