@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+# To run script, user must run as root or with sudo privileges, sudo will bypass check.
+# If the effective user id (current user) has an id not 0, then they are not root user.
+if [[ "$EUID" -ne 0 ]]; then
+  echo "======ERROR======"
+  echo "You must run this script as a root user or with sudo privileges."
+  exit 1
+fi
+
+# Initialize our variable to point to our .txt filename that holds the defined list of packages to install
+package_list=~/project1/packages.txt
+
+# After initializing path to .txt, we check if it does not exist to exit with an error.
+if [[ ! -f $package_list ]]; then
+  echo "======ERROR======"
+  echo "List of packages not found."
+  exit 1
+fi
+
+
+# Using while loop to read from a file: https://kodekloud.com/blog/read-file-in-bash/
+# read manual page: https://linuxcommand.org/lc3_man_pages/readh.html
+# Loop through each line of our .txt file that holds our list of packages
+while read -r PACKAGE; do
+  # Use options -Q (Query) and -s (search) to output information of the current PACKAGE in the list.
+  # Checks for and sends output to /dev/null because only need confirmation if the command successfuly runs
+  # with exit code 0 meaning the package exists
+  if pacman -Qs $PACKAGE > /dev/null; then
+    echo "Package: $PACKAGE is already installed."
+  else
+    # If no output found from previous check (meaning we get exit code 1) then that means package does not exist
+    # so the script installs the package
+    echo "======INSTALLING PACKAGE======"
+    # Use -Syu to Sync/Install a fresh copy and upgrade packages to recent version
+    # Use --noconfirm to skip confirmation messages since we are running pacman in a script
+    # pacman manual: https://man.archlinux.org/man/pacman.8.en
+    pacman -Syu --noconfirm $PACKAGE
+  fi
+done < $package_list # Input package.txt file for while loop with the input file-descriptor '<'.
