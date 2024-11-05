@@ -13,9 +13,9 @@
 ### About Scripts
 
 In the project 1 folder, you will find scripts that will help streamline the setup process for new systems:
-1. The `package-install-script` will download the desired packages listed in the `packages.txt` file. In our example we will download the `kakoune` and `tmux` packages.
-* `kakoune` is a modal text editor for Linux that is inspired from Vim.
-* `tmux` is a terminal multiplexer: it enables a number of terminals, each able to run a separate program which can be controlled and accessed from a single screen.
+1. The `package-install-script` will download the desired packages listed in the `packages.txt` file. There is a separate `.txt` file to allow the user to add or remove more packages. This way it will be easier to edit the `packages.txt` file with the package name instead of editing the script code. This script will download the `kakoune` and `tmux` packages listed.
+* `kakoune` is a modal text editor for Linux that is inspired from Vim. https://wiki.archlinux.org/title/Kakoune
+* `tmux` is a terminal multiplexer: it enables a number of terminals, each able to run a separate program which can be controlled and accessed from a single screen. https://wiki.archlinux.org/title/Tmux
 2. The `symlink-setup-script` ...
 3. The `complete-setup-script` ...
 
