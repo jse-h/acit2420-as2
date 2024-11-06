@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+
+# Initialize the directory to the sample config files, the paths are hard-coded since the user is
+# instructed to install and take all files from our repository. When cloning repository we will end up with the path below:
+main_dir=~/acit2420-as2/project1/main_configs
+
+# Initialize helper function to check if directory exists and create required directories.
+dir_helper_func() {
+  # Initialize a local variable taking the first argument that will act as our directory name we want to create
+  local dir_arg=$1
+
+  # If the directory does not exist, then we mkdir the directory
+  if [[ ! -d $dir_arg ]]; then
+    mkdir -p $dir_arg
+    echo "======DIRECTORY $dir_arg CREATED======"
+  else
+    echo "======NOTE: DIRECTORY CHECK======"
+    echo "Attempted to create Directory: $dir_arg. Directory already exists."
+  fi
+}
+
+# 1. Creating Symbolic Link for ~/bin files to repo files
+
+dir_helper_func ~/bin # Call helper function giving directory ~/bin. It will create ~/bin if it doesnt exist.
+
+# Loop through the contents of the sample configuration files from ~/project1/main_config/bin and 
+# to create symbolic links to files in newly created ~/bin directory
+for file in $main_dir/bin/*; do
+  # If the Symbolic Link does not exist we create the link pointing to ~/bin/<file_name>
+  # $file will give the full path from the file from $main_dir/bin
+  # $(basename "$file") using the basename command to get just the file name to help create the path ~/bin/<file_name>
+  if [[ ! -L ~/bin/$(basename "$file") ]]; then
+    echo "======SUCCESS======"
+    echo "Symbolic Link for $file created."
+    ln -s $file ~/bin/$(basename "$file")
+  else
+    # If the Symbolic Link exists already, skip the file
+    echo "======NOTE: BIN SYMBOLIC LINK======"
+    echo "Symbolic Link for $file already exists."
+  fi
+done
+
+# 2. Creating Symbolic Link for ~/.config
+
+dir_helper_func ~/.config # Call helper function giving directory ~/.config. It will create ~/.config if it 
+
+# Loop through the contents of the sample configuration files from ~/acit2420-as2/project1/main_configs/<dirs> and
+# create symbolic links to files in newly created ~/.config directory
+
+# Check if Symbolic Link exists pointing to kak directory, if it does not exist we create the directory and can assume there is no
+# symbolic link nested in for the kakrc file, so it also creates the symbolic link for the kakrc
+if [[ ! -d ~/.config/kak ]]; then
+  dir_helper_func ~/.config/kak # Call helper function to create the directory
+  if [[ ! -L ~/.config/tmux/tmux.conf ]]; then
+    echo "======SUCCESS======"
+    echo "Symbolic link for kakrc created."
+    ln -s $main_dir/config/kak/kakrc ~/.config/kak/kakrc
+  fi
+ else
+   echo "======NOTE: KAKRC SYMBOLIC LINK======"
+   echo "Symbolic Link for kakrc exists."
+fi
+
+# Check if Symbolic Link exists pointing to tmux directory, if it does not exist, we create the directory and can assume there is no
+# symbolic link nested in for the tmux.conf file, so we also create the symbolic linke for the tmux.conf
+if [[ ! -d ~/.config/tmux ]]; then
+  dir_helper_func ~/.config/tmux # Call helper function to create the directory
+  if [[ ! -L ~/.config/tmux/tmux.conf ]]; then
+    echo "======SUCCESS======"
+    echo "Symbolic Link for tmux.conf created."
+    ln -s $main_dir/config/tmux/tmux.conf ~/.config/tmux/tmux.conf
+  fi
+else
+  echo "======NOTE: TMUX.CONF SYMBOLIC LINK======"
+  echo "Symbolic Link for tmux.conf exists."
+fi
+
+# 3. Creating Symbolic Link for ~/.bashrc
+
+# Conditional to check if .bashrc exists (typically created by default for new users with no configuration)
+# if the check passes, then we overwrite the current ~/.bashrc with a new link from the sample configuration files
+# if it check fails, then we create the symbolic link to the ~/.bashrc
+
+if [[ -f ~/.bashrc ]]; then
+  echo "======NOTE: .BASHRC SYMBOLIC LINK======"
+  echo ".bashrc file exists already. Attempting to overrwrite with new link."
+  ln -fs $main_dir/home/bashrc ~/.bashrc # the -f option is used to overwrite the existing .bashrc file to point to home/bashrc
+else
+  echo "======SUCCESS======"
+  echo "Symbolic Link for $main_dir/home/bashrc created."
+  ln -s $main_dir/home/bashrc ~/.bashrc # If .bashrc file does not exist in our user's home directory, we create the symbolic link
+fi
