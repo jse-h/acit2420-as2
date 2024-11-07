@@ -3,7 +3,8 @@
 # =================================
 # File Name: symlink-setup-script
 # Author: Jesse Ha
-# Created: 07-11-2024
+# Created: 05-11-2024
+# Last Modified: 07-11-2024
 # Description: Script that creates symbolic links pointing to sample configuration files.
 # References:
 #   [1]: $SUDO_USER Environment Variable - https://man7.org/linux/man-pages/man8/sudo.8.html#ENVIRONMENT

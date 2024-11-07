@@ -1,40 +1,45 @@
 #!/usr/bin/env bash
 
-# To run script, user must run as root or with sudo privileges, sudo will bypass check.
-# If the effective user id (current user) has an id not 0, then they are not root user.
-if [[ "$EUID" -ne 0 ]]; then
+# ================================
+# File Name: package-install-script
+# Author: Jesse Ha
+# Created: 03-11-2024
+# Last Modified: 07-11-2024
+# Version: 1.1
+# Description: Script that looks at the plain text file 'packages.txt' and installs
+# scripts based on the text file contents
+# References:
+#   [1]: Using while loop to read from a file - https://kodekloud.com/blog/read-file-in-bash/
+#   [2]: read manual page - https://linuxcommand.org/lc3_man_pages/readh.html
+#   [3]: Using pacman -Qs - https://man.archlinux.org/man/pacman.8.en#OPERATIONS
+# ================================
+
+# Logic to check and require the script to be run as root user or with sudo privileges
+if [[ "$(id -u)" -ne 0 ]]; then
   echo "======ERROR======"
   echo "You must run this script as a root user or with sudo privileges."
   exit 1
 fi
 
-# Initialize our variable to point to our .txt filename that holds the defined list of packages to install
-package_list=~/project1/packages.txt
+# Define package_list variable to point to our plain text file of user defined packages list
+package_list=packages.txt
 
-# After initializing path to .txt, we check if it does not exist to exit with an error.
+# Logic to check if working project directory contains 'packages.txt' file
 if [[ ! -f $package_list ]]; then
   echo "======ERROR======"
   echo "List of packages not found."
+  echo "Directory must contain a packages.txt file containing list of packages"
   exit 1
 fi
 
-
-# Using while loop to read from a file: https://kodekloud.com/blog/read-file-in-bash/
-# read manual page: https://linuxcommand.org/lc3_man_pages/readh.html
-# Loop through each line of our .txt file that holds our list of packages
+# Loop through packages.txt file and read each line [1] [2]
 while read -r PACKAGE; do
-  # Use options -Q (Query) and -s (search) to output information of the current PACKAGE in the list.
-  # Checks for and sends output to /dev/null because only need confirmation if the command successfuly runs
-  # with exit code 0 meaning the package exists
+  # Logic to check if package exists by querying information of package as output. [3]
+  # If an output is produced = package exists, and send output to /dev/null since logic wants to only check for exit code 0
   if pacman -Qs $PACKAGE > /dev/null; then
     echo "Package: $PACKAGE is already installed."
   else
-    # If no output found from previous check (meaning we get exit code 1) then that means package does not exist
-    # so the script installs the package
     echo "======INSTALLING PACKAGE======"
-    # Use -Syu to Sync/Install a fresh copy and upgrade packages to recent version
-    # Use --noconfirm to skip confirmation messages since we are running pacman in a script
-    # pacman manual: https://man.archlinux.org/man/pacman.8.en
     pacman -Syu --noconfirm $PACKAGE
   fi
 done < $package_list # Input package.txt file for while loop with the input file-descriptor '<'.
