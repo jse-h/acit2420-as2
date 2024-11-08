@@ -87,14 +87,14 @@ sudo pacman -Syu neovim
 It is recommended to run **only** the `main-script` file to install packages and/or set up the symbolic links. The main script requires the user to run with `sudo` privileges or as `root` user because the script can install packages.
 
 This is what the usage guide built into the `main-script` looks like that gives the valid options and syntax:
-```bash
-  Usage: sudo ./main-script -a | -p | -l | -h"
-  Syntax: sudo ./main-script [OPTION]"
-  Options:"
-  -a, ALL | calls both package-install-script and symlink-setup-script"
-  -p, PACKAGE | calls the package-install-script"
-  -l, LINK | calls the symlink-setup-script"
-  -h, HELP | show syntax and options for usage"
+```
+  Usage: sudo ./main-script -a | -p | -l | -h
+  Syntax: sudo ./main-script [OPTION]
+  Options:
+  -a, ALL | calls both package-install-script and symlink-setup-script
+  -p, PACKAGE | calls the package-install-script
+  -l, LINK | calls the symlink-setup-script
+  -h, HELP | show syntax and options for usage
 ```
 
 Refer to the commands below for example usage of the script
@@ -109,7 +109,7 @@ sudo ./main-script -p
 ```
 
 ```bash
-# Command to only run the file to create symbolic links
+# Command to only run the symbolic link creator
 sudo ./main-script -l
 ```
 
