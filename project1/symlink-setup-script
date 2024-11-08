@@ -5,38 +5,32 @@
 # Author: Jesse Ha
 # Created: 05-11-2024
 # Last Modified: 07-11-2024
+# Version: 1.1
 # Description: Script that creates symbolic links pointing to sample configuration files.
 # References:
 #   [1]: $SUDO_USER Environment Variable - https://man7.org/linux/man-pages/man8/sudo.8.html#ENVIRONMENT
 #   [2]: basename command usage - https://man7.org/linux/man-pages/man3/basename.3.html
 # =================================
 
+
+
+
 # =================================
 # Function: check_user
 # Description: Checks if user is running script as root, with sudo, or as a regular user 
 # and defines a home_dir variable to use to build symbolic link paths
 # =================================
-#
-# When using sudo to run the script without $SUDO_USER it will set the home directory as root/home 
-# and we don't want to make changes to the root directory if we are not the root user, only the home 
-# directory of the current user using the device.
 
-# Initialize helper function to call to check if current user is root or using sudo privileges.
-# Since we are only making symlinks to our home directory, script is not preventing user to run script
-# if they are not root/using sudo, only setting the paths as their regular home directory if they used sudo.
-# using ~ and running sudo will cause invalid paths since it accesses root user's home directory
 check_user() {
-  if [[ $SUDO_USER ]]; then # conditional to check if the user is running script with $SUDO_USER environment variable [1]
-    if [[ "$(id -u)" -eq 0 ]]; then # check for the root user by checking current user id. if id = 0 then they are root
-      echo "======NOTE: USER CHECK======"
-      echo "Script running as root user."
-      home_dir=/root # since they are root, set home_dir variable to /root home directory
-    else
-      echo "======NOTE: USER CHECK======"
-      echo "Script running with sudo by $SUDO_USER"
-      # if the script is ran with sudo, set the home directory as the /home/<user-that-used-sudo>
-      home_dir=/home/$SUDO_USER
-    fi
+  if [[ $SUDO_USER ]]; then # check if the user is running script with $SUDO_USER environment variable [1]
+    echo "======NOTE: USER CHECK======"
+    echo "Script running with sudo by $SUDO_USER"
+    # if the script is ran with sudo, set the home directory as the /home/<user-that-used-sudo>
+    home_dir=/home/$SUDO_USER
+  elif [[ "$(id -u)" -eq 0 ]]; then # check for the root user with current user id. if id = 0 then they are root
+    echo "======NOTE: USER CHECK======"
+    echo "Script running as root user."
+    home_dir=/root # since they are root, set home_dir variable to /root home directory
   else
     echo "======NOTE: USER CHECK======"
     echo "Script running as regular user $(whoami)." # Command expansion to get username
@@ -47,7 +41,7 @@ check_user() {
 check_user # Call helper function to build paths
 
 # Define main_dir variable which is the path to the configuration files provided
-main_dir=$home_dir/assignment2/project1/main_configs
+main_dir=$home_dir/acit2420-as2/project1/main_configs
 
 # =================================
 # Function: dir_helper_func
@@ -55,6 +49,7 @@ main_dir=$home_dir/assignment2/project1/main_configs
 # Parameters:
 #   $1: Path to new directory
 # =================================
+
 dir_helper_func() {
   # Define local dir_arg variable as our first parameter of our path to new directory
   local dir_arg=$1
@@ -69,71 +64,70 @@ dir_helper_func() {
   fi
 }
 
+# ========================================================
 # 1. Creating Symbolic Link for ~/bin files to repo files
+# ========================================================
 
-dir_helper_func $main_dir/bin # Call helper function to create and check ~/bin directory
+dir_helper_func $home_dir/bin # Call helper function to create and check ~/bin directory
 
 # Use a loop to look at paths contained in our sample configuration files
 for file in $main_dir/bin/*; do 
   # Logic to check and create the symbolic link if it doesn't exist
-  if [[ ! -L $main_dir/bin/$(basename "$file") ]]; then
+  if [[ ! -L $home_dir/bin/$(basename "$file") ]]; then
     echo "======SUCCESS======"
     echo "Symbolic Link for $file created."
     # $file will give the full path from the file from $main_dir/bin
     # $(basename "$file") using the basename command to get just the file name [2]
-    ln -s $file $main_dir/bin/$(basename "$file")
+    ln -s $file $home_dir/bin/$(basename "$file")
   else
     echo "======NOTE: BIN SYMBOLIC LINK======"
     echo "Symbolic Link for $file already exists."
   fi
 done
 
+# ========================================
 # 2. Creating Symbolic Link for ~/.config
+# ========================================
 
-dir_helper_func $main_dir/.config # Call helper function to create and check ~/.config directory
+dir_helper_func $home_dir/.config # Call helper function to create and check ~/.config directory
 
-# Logic to check and create if subdirectories in /.config do not exist, and will also create symbolic link to kakrc file
-if [[ ! -d $main_dir/.config/kak ]]; then
-  dir_helper_func $main_dir/.config/kak # Call helper function to create directory /home/user/.config/kak
-  if [[ ! -L $main_dir/.config/tmux/tmux.conf ]]; then
+# Logic to check and create if subdirectory kak does not exist, and will also create symbolic link to kakrc file
+if [[ ! -d $home_dir/.config/kak ]]; then
+  dir_helper_func $home_dir/.config/kak # Call helper function to create directory /home/user/.config/kak
+  if [[ ! -L $home_dir/.config/tmux/tmux.conf ]]; then
     echo "======SUCCESS======"
     echo "Symbolic link for kakrc created."
-    ln -s $main_dir/config/kak/kakrc $main_dir/.config/kak/kakrc
+    ln -s $main_dir/config/kak/kakrc $home_dir/.config/kak/kakrc
   fi
  else
    echo "======NOTE: KAKRC SYMBOLIC LINK======"
    echo "Symbolic Link for kakrc exists."
 fi
 
-# Check if Symbolic Link exists pointing to tmux directory, if it does not exist, we create the directory and can assume there is no
-# symbolic link nested in for the tmux.conf file, so we also create the symbolic linke for the tmux.conf
-
-# Logic to check and create if subdirectories in /.config do not exist, and will also create symbolic link to tmux.conf file
-if [[ ! -d $main_dir/.config/tmux ]]; then
-  dir_helper_func $main_dir/.config/tmux # Call helper function to create directory /home/user/.config/tmux
-  if [[ ! -L $main_dir/.config/tmux/tmux.conf ]]; then
+# Logic to check and create if subdirectory tmux does not exist, and will also create symbolic link to tmux.conf file
+if [[ ! -d $home_dir/.config/tmux ]]; then
+  dir_helper_func $home_dir/.config/tmux # Call helper function to create directory /home/user/.config/tmux
+  if [[ ! -L $home_dir/.config/tmux/tmux.conf ]]; then
     echo "======SUCCESS======"
     echo "Symbolic Link for tmux.conf created."
-    ln -s $main_dir/config/tmux/tmux.conf $main_dir/.config/tmux/tmux.conf
+    ln -s $main_dir/config/tmux/tmux.conf $home_dir/.config/tmux/tmux.conf
   fi
 else
   echo "======NOTE: TMUX.CONF SYMBOLIC LINK======"
   echo "Symbolic Link for tmux.conf exists."
 fi
 
+# ========================================
 # 3. Creating Symbolic Link for ~/.bashrc
-
-# Conditional to check if .bashrc exists (typically created by default for new users with no configuration)
-# if the check passes, then we overwrite the current ~/.bashrc with a new link from the sample configuration files
-# if it check fails, then we create the symbolic link to the ~/.bashrc
+# ========================================
 
 # Logic to check if home/user/.bashrc file exists and create symbolic link
-if [[ -f $main_dir/.bashrc ]]; then
+if [[ -f $home_dir/.bashrc ]]; then
   echo "======NOTE: .BASHRC SYMBOLIC LINK======"
   echo ".bashrc file exists already. Attempting to overrwrite with new link."
-  ln -fs $main_dir/home/bashrc $main_dir/.bashrc # the -f option is used to overwrite the existing .bashrc file
+  ln -fs $main_dir/home/bashrc $home_dir/.bashrc # the -f option is used to overwrite the existing .bashrc file
 else
   echo "======SUCCESS======"
   echo "Symbolic Link for $main_dir/home/bashrc created."
-  ln -s $main_dir/home/bashrc $main_dir/.bashrc
+  ln -s $main_dir/home/bashrc $home_dir/.bashrc
 fi
