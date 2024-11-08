@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+
+# =================================
+# File Name: main-script
+# Author: Jesse Ha
+# Created: 07-11-2024
+# Last Modified: 07-11-2024
+# Version: 1.0
+# Description: Script that has options to call either symlink-setup-script 
+# and package-install-script for a quick installation for a new system
+# =================================
+
+
+
+# Logic to check if script is run as root user or with sudo privileges
+if [[ "$(id -u)" -ne 0 ]]; then
+  echo "Script must be run as root user or with sudo"
+  exit 1
+fi
+
+# ===========================
+# Function: usage
+# Description: Display syntax and available options for the script
+# ===========================
+usage() {
+  echo "Usage: $0 -a | -p | -l | -h"
+  echo "Syntax: $0 [OPTION]"
+  echo
+  echo "Options:"
+  echo "-a, ALL | calls both package-install-script and symlink-setup-script"
+  echo
+  echo "-p, PACKAGE | calls the package-install-script"
+  echo
+  echo "-l, LINK | calls the symlink-setup-script"
+  echo
+  echo "-h, HELP | show syntax and options for usage"
+  echo
+  exit 1
+}
+
+
+# Main functionality with getopts
+
+while getopts ":aplh" OPT; do
+  case "${OPT}" in
+    a) # User runs all scripts
+      echo "Running package installer and creating links..." 
+      ./package-install-script
+      ./symlink-setup-script
+      exit 0
+      ;;
+    p) # User runs only the package installer
+      echo "Running package installer..."
+      ./package-install-script
+      exit 0
+      ;;
+    l) # User only creates symbolic links
+      echo "Creating symbolic links..."
+      ./symlink-setup-script
+      exit 0
+      ;;
+    h) # Call usage function to display syntax and options
+      usage
+      ;;
+    \?)
+      echo "Invalid option(s). Please read the usage guide below."
+      echo
+      usage
+      ;;
+  esac
+done
+
+# Shift option index back to 1 to check for additional or no arguments
+shift $((OPTIND - 1))
+
+# Logic to check if there are no arguments
+if [[ $# -lt 1 ]]; then
+  echo "You need to provide an option to run this script. Please read the usage guide below."
+  echo
+  usage
+fi
