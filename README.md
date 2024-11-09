@@ -18,7 +18,7 @@ This project (`project2`) holds a script that will automate the process of creat
 
 1. `package-install-script` bash script file
 2. `symlink-setup-script` bash script file
-3. `complete-setup-script` bash script file
+3. `main-script` bash script file
 4. `packages.txt` text file
 5. Configuration files under the `bin/`, `config/`, and `home/` directories provided for the packages
 
@@ -32,7 +32,7 @@ In the project 1 folder, you will find scripts that will help streamline the set
 >[!TIP]
 > If the user would like to download more scripts, they can use a text editor like `vim` or `nano` to edit the `packages.txt` file and append more package names separated by each line.
 
-2. The `symlink-setup-script` file will create symbolic links pointing to the provided configuration files located in the `main_configs` directory from your user home directory. For example, this script creates the `/home/<user-name>/bin` directory and provides a symbolic link to files located in `/main_configs/bin`.
+2. The `symlink-setup-script` file will create symbolic links pointing to the provided configuration files located in the `main_configs` directory from your user home directory. A **symbolic link** is essentially a **shortcut**, it's a special kind of file that directs the system to look at the original file. For example, this script creates the `/home/<user-name>/bin` directory and provides a symbolic link to files located in `/main_configs/bin`.
 
 3. The `main-script` file is the main script that can help run both the `package-install-script` and `symlink-setup-script` for a quicker installation process.
 
@@ -78,6 +78,11 @@ The command below is an example how to install the `nvim` package:
 ```bash
 sudo pacman -Syu neovim
 ```
+* `git` is a distributed version control system that tracks versions of files. In our project, we will be mainly concerned of only using `git` to clone this repository to grab the necessary files.
+Copy and run the command below to install the `git` package:
+```bash
+sudo pacman -Syu git
+```
 
 >[!CAUTION]
 > Please refer to the documentation for the various dependencies and packages if you are unfamiliar with using them
@@ -119,3 +124,76 @@ sudo ./main-script -h
 ```
 
 ## Project 2: New User Script
+
+### Folder Contents
+
+In this project, there is one script file that helps create new users for your Linux system
+
+1. The `create_user` script file
+
+### About Script
+
+1. The `create_user` script file creates new users and have options to allow them to add the user to new groups or existing groups. 
+
+### Requirements
+
+* The script must be run as root user or with sudo privileges
+* An `/etc/skel` folder in your `/etc` directory to be copied and used as base files for your new user
+
+### Usage and Examples
+
+This is what the usage guide built into the `create_user` script looks like that gives the valid options and syntax:
+```
+Usage: create_user -u | -g | -h | -s | -i 
+Syntax: create_user [OPTION...] [ARGUMENTS...]
+ -u USERNAME,     specify the username desired of the new user
+ -g GROUPS,       specify the new groups or existing groups to add to the user, 
+                  can take a string of one or more groups
+
+ -h HOME,         specify the path to the user's home directory
+ -s SHELL,        specify the path to the user's shell
+ -i INFO,         display the usage guide and syntax with options
+```
+
+>[!NOTE]
+> The script does not ask the user to set a user id (`uid`) or group id (`gid`), instead it automatically assigns the next highest and unique `uid` and `gid` value.
+
+Refer to the commands below for example usage of the script
+```bash
+# Command making a new user "John" using the -u, -g, and -i flags
+sudo ./create_user -u "John" -g "group1" -i "Cloud User"
+```
+
+```bash
+# Command making a new user "Jane" and adding them to multiple groups
+# The script will make any new groups and add user to existing to groups
+sudo ./create_user -u "John" -g "group1 group2 group3"
+```
+
+### Troubleshooting
+
+The script has built-in error handling for if there are existing usernames or groups already exising in your Linux system.
+
+This script will add an entry to the files below: 
+* `/etc/passwd`, the user entry is appended that displays the username, user ID, group ID, user's home directory, and user's shell.
+* `/etc/shadow`, the encrypted password file for the user is reflected in this file.
+* `/etc/group`, new group entries is appended and displays the groupname and corresponding group ID
+
+To successfully check that the user has been created you can view those files above that have been changed by using a text editor to view the file or using the `cat` command.
+
+Copy and run the commands below to look at the various files:
+
+```bash
+# View contents of the passwd file
+cat /etc/passwd
+```
+
+```bash
+# View contents of the shadow file
+sudo cat /etc/passwd
+```
+
+```bash
+# View contents of the group file
+cat /etc/group
+```
