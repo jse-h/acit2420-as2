@@ -1,5 +1,22 @@
 # Assignment 2: Shell Scripting
 
+# Table of Contents
+
+1. [About Repository](#about-repository)
+2. [Project 1: Configuration Scripts](#project-1-configuration-scripts)
+    - [Folder Contents](#folder-contents)
+    - [About Scripts](#about-scripts)
+    - [Requirements](#requirements)
+        - [Dependencies](#dependencies)
+    - [Usage and Examples](#usage-and-examples)
+3. [Project 2: New User Script](#project-2-new-user-script)
+    - [Folder Contents](#folder-contents-1)
+    - [About Script](#about-script)
+    - [Requirements](#requirements-1)
+    - [Usage and Examples](#usage-and-examples-1)
+    - [Troubleshooting](#troubleshooting)
+
+
 ## About Repository
 
 This repository holds 2 projects involving shell scripting which is an essential skill for software engineers and system administrators.
