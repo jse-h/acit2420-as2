@@ -1,8 +1,21 @@
 #!/usr/bin/env bash
-# [1]: bash conditionals - https://earthly.dev/blog/bash-conditionals/
-# [2]: Linux sort manual - https://man7.org/linux/man-pages/man1/sort.1.html
-# [3]: Using awk for column conditionals - https://stackoverflow.com/questions/14739057/using-awk-with-column-value-conditions
-# [4]: Linux tail manual - https://man7.org/linux/man-pages/man1/tail.1.html
+
+
+# =================================================
+# File Name: create_user
+# Author: Jesse Ha
+# Created: 07-11-2024
+# Last Modified: 08-11-2024
+# Version: 1.1
+# Description: Script that creates a new user on the system with specified options like username, multiple groups, home directory, and user's shell
+# References:
+#   [1]: bash conditionals - https://earthly.dev/blog/bash-conditionals/
+#   [2]: Linux sort manual - https://man7.org/linux/man-pages/man1/sort.1.html
+#   [3]: Using awk for column conditionals - https://stackoverflow.com/questions/14739057/using-awk-with-column-value-conditions
+#   [4]: Linux tail manual - https://man7.org/linux/man-pages/man1/tail.1.html
+#   [5]: Linux sed manual - https://man7.org/linux/man-pages/man1/sed.1p.html
+#   [6]: Linux adduser manual - https://linux.die.net/man/8/adduser
+# ==================================================
 
 # Logic to check and require script to be run as root user or with sudo
 if [[ $EUID -ne 0 ]]; then
@@ -10,15 +23,28 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
+# ======================================
+# Function: usage
+# Description: Display syntax and available options to run the script.
+# Parameters:
+#   None
+# ======================================
+
 usage() {
-  echo "Usage: create-user -u | -g | -h "
-  echo " -s | i | "
+  echo "Usage: create_user -u | -g | -h | -s | -i "
+  echo "Syntax: create_user [OPTION...] [ARGUMENTS...]"
   echo
-  echo Syntax: 
+  echo " -u USERNAME,     specify the username desired of the new user"
+  echo " -g GROUPS,       specify the new groups or existing groups to add to the user, can take a string of one or more groups"
+  echo " -h HOME,         specify the path to the user's home directory"
+  echo " -s SHELL,        specify the path to the user's shell"
+  echo " -i INFO,         display the usage guide and syntax with options"
+  echo
   exit 0
 }
 
 # Initialize default variables
+
 groups="wheel"
 homedir=""
 shell="/bin/bash"
@@ -29,19 +55,21 @@ shell="/bin/bash"
 
 while getopts ":u:g:i:h:s:" OPT; do
   case $OPT in
-    u) 
+    u) # Get username for new user
       username="${OPTARG}"      ;;
-    g)
+    g) # Get groups to add the user to
       groups="${OPTARG}"      ;;
-    i)
+    i) # Get specific information or comments for user
       info="${OPTARG}"  ;;
-    h) 
+    h) # Get specified path of user's home directory
       homedir="${OPTARG}"  ;;
-    s) 
+    s) # Get specified path to user's shell
       shell="${OPTARG}" ;;
-    ?) 
+    ?) # If invalid option, show usage function
+      echo "Invalid option(s). Please read usage guide below."
       usage ;;
-    *) 
+    :) # Display error message.
+      echo "Error. Please read usage guide below."
       usage ;;
   esac
 done
@@ -86,6 +114,8 @@ if [[ $(awk -F: -v gid="$uid" '$3 == gid {print "ERROR: GROUP EXISTS"}' /etc/gro
   exit 1
 else
   gid=$uid
+  # Append user to group file
+  echo "$username:x:$gid:" >> /etc/group
 fi
 
 # If home directory option is unspecified, set default to /home/<user-name>
@@ -112,6 +142,31 @@ if [[ -z "$shell" ]]; then
   shell=$shell
 fi
 
+# Logic to check if $groups has content
+if [[ -n "$groups" ]]; then
+  # Loop through string of groups
+  for group in $groups; do
+
+    # Each loop initialize max_group_id group to get the max groupid + 1 to get unique group ids
+    max_group_id=$(( "$(cat /etc/group | cut -d ":" -f3 | sort -n | tail -1)" + 1 ))
+    
+    # Logic to check if the current iteration group name does not exist using awk
+    if [[ ! $(awk -F: -v group="$group" '$1 == group {print "GROUP EXISTS"}' /etc/group) ]]; then
+
+      # Case that group does not exist: Create new group + append user to said group [6]
+      echo "======NOTE======"
+      echo "Adding new group: $group"
+      echo "$group:x:$max_group_id" >> /etc/group
+      sed -i "/^$group:/ s/$/,$username/" /etc/group
+    else
+
+      # Case that group does exist: Append user to groups
+      echo "Group: $group already exists. Appending user to group."
+      sed -i "/^$group:/ s/$/,$username/" /etc/group
+    fi
+  done
+fi
+
 # ===========================
 # Building User File Contents
 # ===========================
@@ -122,16 +177,14 @@ echo "$username:x:$uid:$gid:$info:$homedir:$shell" >> /etc/passwd
 # Append user entry to shadow file
 echo "$username:!*::::::" >> /etc/shadow
 
-# Append user to group file
-echo "$username:x:$gid:" >> /etc/group
-
 # Copy contents of skeleton recursively to new user's home directory
 cp -r /etc/skel/. "$homedir"
 
 # Change ownership of home directory to user
-chown -R "$username:$gid" "$homedir"
+chown -R "$username:$username" "$homedir"
 
-# Change permissions for home directory of user
+# Change permissions for home directory of user (7 = all permissions only for user)
 chmod -R 700 "$homedir"
 
-
+# Prompts user to set password [6]
+passwd "$username"
