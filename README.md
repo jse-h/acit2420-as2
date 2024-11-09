@@ -26,8 +26,8 @@ This project (`project2`) holds a script that will automate the process of creat
 
 In the project 1 folder, you will find scripts that will help streamline the setup process for new systems:
 1. The `package-install-script` file will install the desired packages listed in the `packages.txt` file. This script will install the `kakoune` and `tmux` packages listed.
-* `kakoune` is a modal text editor for Linux that is inspired from Vim. https://wiki.archlinux.org/title/Kakoune
-* `tmux` is a terminal multiplexer: it enables a number of terminals, each able to run a separate program which can be controlled and accessed from a single screen. https://wiki.archlinux.org/title/Tmux
+* `kakoune` is a modal text editor for Linux that is inspired from Vim.[^4]
+* `tmux` is a terminal multiplexer: it enables a number of terminals, each able to run a separate program which can be controlled and accessed from a single screen. [^5]
 
 >[!TIP]
 > If the user would like to download more scripts, they can use a text editor like `vim` or `nano` to edit the `packages.txt` file and append more package names separated by each line.
@@ -133,7 +133,7 @@ In this project, there is one script file that helps create new users for your L
 
 ### About Script
 
-1. The `create_user` script file creates new users and have options to allow them to add the user to new groups or existing groups. 
+The `create_user` script file creates new users and have options to allow them to add the user to new groups or existing groups. 
 
 ### Requirements
 
@@ -179,7 +179,7 @@ This script will add an entry to the files below:
 * `/etc/shadow`, the encrypted password file for the user is reflected in this file.
 * `/etc/group`, new group entries is appended and displays the groupname and corresponding group ID
 
-To successfully check that the user has been created you can view those files above that have been changed by using a text editor to view the file or using the `cat` command.
+To successfully check that the user has been created you can view those files above that have been changed by using a text editor to view the file or using the `cat` command. [^3]
 
 Copy and run the commands below to look at the various files:
 
@@ -197,3 +197,32 @@ sudo cat /etc/passwd
 # View contents of the group file
 cat /etc/group
 ```
+
+When testing the script, you may want to delete certain test groups, users, and/or directories created.
+
+After viewing the files you may use the `userdel`[^1] or `groupdel`[^2] utility that will help you remove test users and groups respectively.
+
+Below are examples of using each utility:
+
+```bash
+# Requires root user or sudo privileges, this command removes the user john from the system.
+sudo userdel -r john # The -r option removes john's home directory as well
+
+# Note: This does not remove other files elsewhere owned by user 'john'
+```
+
+>[!NOTE]
+> The `userdel` utility removes the user's entry from the `/etc/passwd` and `/etc/shadow` files.
+
+```bash
+# Requires root user or sudo privileges, this command deletes the group `group1`
+sudo groupdel group1
+
+# Note: This does not delete files owned by the group
+```
+
+[^1]: https://man7.org/linux/man-pages/man8/userdel.8.html
+[^2]: https://man7.org/linux/man-pages/man8/groupdel.8.html
+[^3]: https://man7.org/linux/man-pages/man1/cat.1.html
+[^4]: https://wiki.archlinux.org/title/Kakoune
+[^5]: https://wiki.archlinux.org/title/Tmux
