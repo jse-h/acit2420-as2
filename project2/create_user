@@ -1,0 +1,137 @@
+#!/usr/bin/env bash
+# [1]: bash conditionals - https://earthly.dev/blog/bash-conditionals/
+# [2]: Linux sort manual - https://man7.org/linux/man-pages/man1/sort.1.html
+# [3]: Using awk for column conditionals - https://stackoverflow.com/questions/14739057/using-awk-with-column-value-conditions
+# [4]: Linux tail manual - https://man7.org/linux/man-pages/man1/tail.1.html
+
+# Logic to check and require script to be run as root user or with sudo
+if [[ $EUID -ne 0 ]]; then
+  echo "This script needs to be run as a root user or with sudo privileges."
+  exit 1
+fi
+
+usage() {
+  echo "Usage: create-user -u | -g | -h "
+  echo " -s | i | "
+  echo
+  echo Syntax: 
+  exit 0
+}
+
+# Initialize default variables
+groups="wheel"
+homedir=""
+shell="/bin/bash"
+
+# ===========================
+# Main function with getopts
+# ===========================
+
+while getopts ":u:g:i:h:s:" OPT; do
+  case $OPT in
+    u) 
+      username="${OPTARG}"      ;;
+    g)
+      groups="${OPTARG}"      ;;
+    i)
+      info="${OPTARG}"  ;;
+    h) 
+      homedir="${OPTARG}"  ;;
+    s) 
+      shell="${OPTARG}" ;;
+    ?) 
+      usage ;;
+    *) 
+      usage ;;
+  esac
+done
+
+shift $((OPTIND -1))
+
+# ====================
+# Validate options
+# ====================
+
+
+# Logic to check if username option is null. [1]
+if [[ -z "$username" ]]; then
+  echo "======ERROR======"
+  echo "A username is required."
+  usage
+fi
+
+# Logic to check if username exists in /etc/passwd
+# awk -F: searches each row and use line separator ':'
+# -v assignment option to be used in awk command declaring local variable username as $username provided
+# $1 == username checks if the first field in /etc/passwd matches the input username
+if [[ $(awk -F: -v username="$username" '$1 == username {print "ERROR: DUPLICATE USER"}' /etc/passwd) ]]; then
+  echo "======ERROR======"
+  echo "This username exists."
+  exit 1
+fi
+
+# By default get the next available uid starting at the greatest UID value then increment by 1
+# use cat to look at contents of /etc/passwd file
+# pipe to cut -d ":" -f3 to grab the third field and use ':' as the separator/delimiter with option -d
+# pipe to sort -n to sort contents numerically
+# pipe to tail -1 to give us the last entry (our largest value) 
+uid=$(( "$(cat /etc/passwd | cut -d ":" -f3 | sort -n | tail -1)" + 1 ))
+echo $uid
+
+# By default set the groupid same as our user id.
+# Logic to check if group id exists in /etc/group similar to username check logic
+if [[ $(awk -F: -v gid="$uid" '$3 == gid {print "ERROR: GROUP EXISTS"}' /etc/group) ]]; then
+  echo "======ERROR======"
+  echo "This group id exists."
+  exit 1
+else
+  gid=$uid
+fi
+
+# If home directory option is unspecified, set default to /home/<user-name>
+if [[ -z "$homedir" ]]; then
+  homedir=/home/$username
+fi
+
+# Check if home directory exists (user might have manually created a custom directory)
+# otherwise we make the home directory
+if [[ -d $homedir ]]; then
+  echo "Home directory already exists."
+  exit 1
+else
+  mkdir -p "$homedir"
+fi
+
+# If info option is unspecified, set default to 'Regular User'
+if [[ -z "$info" ]]; then
+  info="Regular User"
+fi
+
+# If shell directory option is unspecified, set default to the initialized shell variable
+if [[ -z "$shell" ]]; then
+  shell=$shell
+fi
+
+# ===========================
+# Building User File Contents
+# ===========================
+
+# Append user entry to passwd file
+echo "$username:x:$uid:$gid:$info:$homedir:$shell" >> /etc/passwd
+
+# Append user entry to shadow file
+echo "$username:!*::::::" >> /etc/shadow
+
+# Append user to group file
+echo "$username:x:$gid:" >> /etc/group
+
+# Copy contents of skeleton recursively to new user's home directory
+cp -r /etc/skel/. "$homedir"
+
+# Change ownership of home directory to user
+chown -R "$username:$gid" "$homedir"
+
+# Change permissions for home directory of user
+chmod -R 700 "$homedir"
+
+
